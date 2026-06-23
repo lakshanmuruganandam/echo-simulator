@@ -1,35 +1,61 @@
 <div align="center">
   <h1>🪞 Echo Simulator</h1>
   <p><b>An AI simulation of a social media echo chamber. Watch an algorithm radicalize a swarm of LLMs in real-time.</b></p>
-  <img src="https://img.shields.io/badge/Python-3.13-blue.svg" alt="Python Version"/>
-  <img src="https://img.shields.io/badge/FastAPI-Production_Ready-green.svg" alt="FastAPI"/>
-  <img src="https://img.shields.io/badge/License-MIT-purple.svg" alt="License"/>
+  
+  [![Python](https://img.shields.io/badge/Python-3.13-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+  [![FastAPI](https://img.shields.io/badge/FastAPI-Production_Ready-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+  [![License](https://img.shields.io/badge/License-MIT-purple.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+  [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=for-the-badge)](https://github.com/lakshanmuruganandam/echo-simulator/graphs/commit-activity)
 </div>
 
-## 📖 The Story
-We constantly complain about social media algorithms, but it's hard to visualize *how* they manipulate us. 
+---
 
-I decided to build a sandbox to prove it. **Echo Simulator** is a multi-agent system where independent LLM "Citizens" are fed content by a central "Feed Algorithm" designed strictly to maximize engagement. 
+## 📖 The Vision
 
-If you run the simulation long enough, the algorithm will mathematically hide nuanced opinions, surface rage-bait, and split the LLM swarm into two highly-polarized factions. 
+We constantly complain about social media algorithms destroying nuance and polarizing society, but it's hard to visualize *how* the mathematics actually manipulate us behind the scenes. 
 
-## 🚀 How it Works
-1. **The User Nodes (Agents):** Each LLM has a hidden `belief_score` ranging from `-1.0` to `1.0`. 
-2. **The Algorithm (Feed Ranker):** Sorts the global database of posts based on projected engagement. It learns that feeding agents "nuanced" content generates 0 engagement, while feeding them "extreme agreement" or "rage-bait" spikes engagement.
-3. **The Radicalization Loop:** As agents interact with the algorithm's feed, their `belief_score` mathematically shifts closer to the extremes. 
+I decided to build a sandbox to prove it. **Echo Simulator** is an isolated, multi-agent AI environment where independent LLM "Citizens" interact with a central "Feed Algorithm." The algorithm has one core directive: **maximize engagement**. 
 
-### 🧠 System Architecture
+By running this simulation, you can watch in real-time as the algorithm mathematically hides nuanced opinions, surfaces extreme rage-bait, and successfully splits a peaceful LLM swarm into two highly-polarized factions. 
+
+## 🚀 Core Architecture
+
+The simulator is built on a tight feedback loop between User Nodes and the Feed Ranker.
+
+1. **The User Nodes (`src/agents/user_nodes.py`)** 
+   - Each LLM agent is initialized with a hidden `belief_score` ranging from `-1.0` (extreme opposition) to `1.0` (extreme support) on a given topic.
+   - When an agent reads a post, the `NodeSwarm` engine recalculates their belief vector. 
+   - If they read something that strongly agrees with them, they become slightly more radicalized in that direction. If they read something that strongly opposes them (rage-bait), they become *even more* polarized in their original direction.
+
+2. **The Feed Ranker (`src/algorithm/feed_ranker.py`)**
+   - The algorithm evaluates the global database of posts.
+   - It ignores post "quality" entirely. Instead, it predicts engagement based on the user's current `belief_score`.
+   - **The Mathematical Reality:** It calculates that feeding users "nuanced" content (score `0.0`) generates low engagement. Therefore, it exclusively serves "echo chamber" content (to validate the user) or "rage-bait" (to infuriate them).
+
+### 🧠 System Dynamics Flow
 ```mermaid
 graph TD
-    A[Global Post DB] --> B(Feed Ranking Algorithm)
-    B -->|Serves Echo/Rage Bait| C[Agent Alice]
-    B -->|Serves Echo/Rage Bait| D[Agent Bob]
-    C -->|Interacts| E{Belief Shift}
-    D -->|Interacts| E
-    E -->|Updates User Matrix| F[Polarized State]
+    A[(Global Post DB)] --> B(Feed Ranking Algorithm)
+    
+    subgraph The Algorithm's Objective
+    B -->|Predicts Low Engagement| Z[Drops Nuanced Posts]
+    B -->|Predicts High Engagement| C[Serves Echo Content]
+    B -->|Predicts High Engagement| D[Serves Rage-Bait Content]
+    end
+
+    C --> E[Agent Alice]
+    D --> F[Agent Bob]
+    
+    E -->|Interacts| G{Belief Vector Shift}
+    F -->|Interacts| G
+    
+    G -->|Updates Agent State| H[Polarized Faction A]
+    G -->|Updates Agent State| I[Polarized Faction B]
 ```
 
-## 🛠️ Quickstart
+## 🛠️ Quickstart Installation
+
+Ensure you have Python 3.13 installed on your machine.
 
 ```bash
 # 1. Clone the repository
@@ -40,22 +66,30 @@ cd echo-simulator
 python3 -m venv .venv
 source .venv/bin/activate
 
-# 3. Install dependencies
+# 3. Install the mathematical dependencies
 pip install -r requirements.txt
 
 # 4. Start the simulation server
 uvicorn src.main:app --reload
 ```
 
-Hit `http://127.0.0.1:8000/docs` and execute the `/simulate_cycle` endpoint to watch the radicalization unfold in the JSON response.
+Hit `http://127.0.0.1:8000/docs` to access the API. Execute the `POST /simulate_cycle` endpoint multiple times to watch the `belief_score` of the agents drift towards `-1.0` and `1.0` in the JSON response.
 
-## 📦 Tech Stack
-- **FastAPI:** Orchestrates the simulation loop.
-- **Pydantic V2:** Strict mathematical bounds on belief vectors and engagement scoring.
-- **Pytest-Asyncio:** Ensures the polarization math is functioning properly.
+## 🧪 Validating the Math
+The logic that governs the belief drift is strictly tested using Pytest. Run the suite to verify that the algorithm successfully radicalizes a neutral agent:
+```bash
+pytest tests/ -v
+```
+
+## 🛣️ Roadmap
+- [x] Initial JSON Simulation Loop
+- [x] Engagement Ranking Matrix
+- [x] Strict Mathematical Bounds (Pydantic)
+- [ ] Connect OpenAI API to allow agents to generate their own radical posts based on their belief state.
+- [ ] Add a visual web frontend (React) to plot the polarization over time.
 
 ## 🤝 Contributing
-Want to build a healthier feed algorithm to see if the LLMs can be de-radicalized? Open a Pull Request!
+Think you can design a healthier Feed Algorithm that de-radicalizes the LLMs and pushes them toward nuance? Open a Pull Request! 
 
 ---
-*Built with ❤️ by Lakshan Muruganandam*
+*Built with ❤️ by Lakshan Muruganandam | MIT Licensed*
